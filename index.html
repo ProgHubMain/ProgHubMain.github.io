@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Полезные ресурсы | Инструменты и софт</title>
+    <meta name="description" content="Коллекция лучших бесплатных и условно-бесплатных программ, онлайн-сервисов и ресурсов для работы, учёбы и творчества.">
+    <!-- Google Fonts & simple reset -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            line-height: 1.5;
+            scroll-behavior: smooth;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* header / hero */
+        .hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 64px 0 80px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .hero-content {
+            max-width: 800px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(4px);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 24px;
+            letter-spacing: 0.3px;
+        }
+
+        h1 {
+            font-size: 3.2rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            letter-spacing: -0.01em;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: #cbd5e1;
+            margin-bottom: 32px;
+            max-width: 640px;
+        }
+
+        .search-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 240px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 60px;
+            padding: 14px 20px;
+            font-size: 1rem;
+            color: white;
+            outline: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .search-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .search-input:focus {
+            background: rgba(255,255,255,0.18);
+            border-color: #3b82f6;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #3b82f6;
+            border: none;
+            border-radius: 60px;
+            padding: 12px 28px;
+            font-weight: 600;
+            font-size: 1rem;
+            font-family: inherit;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-outline-light {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+
+        .btn-outline-light:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        /* categories strip */
+        .categories {
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(8px);
+            background: rgba(255,255,255,0.92);
+        }
+
+        .cat-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 16px 0;
+        }
+
+        .cat-btn {
+            background: transparent;
+            border: 1px solid #e2e8f0;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            background: white;
+        }
+
+        .cat-btn.active {
+            background: #0f172a;
+            border-color: #0f172a;
+            color: white;
+        }
+
+        .cat-btn:hover:not(.active) {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        /* main grid */
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 48px 0 24px 0;
+            letter-spacing: -0.3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+        }
+
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 28px;
+            padding: 24px;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid #eef2f6;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 30px -12px rgba(0,0,0,0.1);
+            border-color: #e0e7ef;
+        }
+
+        .card-icon {
+            font-size: 2.2rem;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .card-desc {
+            color: #334155;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .card-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            color: #3b82f6;
+            transition: gap 0.2s;
+            margin-top: 8px;
+        }
+
+        .card-link:hover {
+            gap: 12px;
+            color: #1e40af;
+        }
+
+        .footer {
+            background: #0f172a;
+            color: #94a3b8;
+            text-align: center;
+            padding: 48px 0 40px;
+            margin-top: 64px;
+            border-top: 1px solid #1e293b;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 40px;
+            color: #475569;
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 700px) {
+            h1 { font-size: 2.2rem; }
+            .hero { padding: 48px 0 56px; }
+            .resource-grid { grid-template-columns: 1fr; }
+            .section-title { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<section class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="badge">📦 коллекция обновляется — только проверенное</div>
+            <h1>Полезные программы <br> и ресурсы для каждого</h1>
+            <p>Софт, сервисы, онлайн-инструменты — для работы, дизайна, разработки, учёбы и повседневных задач. Бесплатные и условно-бесплатные решения.</p>
+            <div class="search-wrap">
+                <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, описанию или тегу... (например, дизайн, cloud)">
+                <button id="clearSearchBtn" class="btn btn-outline-light">Сбросить</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="categories">
+    <div class="container">
+        <div class="cat-list" id="categoriesContainer">
+            <!-- динамические кнопки категорий -->
+        </div>
+    </div>
+</div>
+
+<main class="container" id="mainContent">
+    <div class="section-title">
+        <span>📌 Все инструменты</span>
+        <span style="font-size: 0.85rem; font-weight: normal;" id="resultCount"></span>
+    </div>
+    <div id="resourcesGrid" class="resource-grid">
+        <!-- карточки будут вставлены через JS -->
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>🔍 Подборка лучших ресурсов — от opensource утилит до профессиональных сервисов.</p>
+        <p style="margin-top: 16px; font-size: 0.85rem;">© 2025 Полезные программы | ссылки ведут на официальные сайты</p>
+    </div>
+</footer>
+
+<script>
+    // ---------- БАЗА ДАННЫХ РЕСУРСОВ ----------
+    const resources = [
+        // ПРОДУКТИВНОСТЬ
+        { id: 1, name: "Obsidian", description: "База знаний и заметки в стиле Zettelkasten. Работает с локальными Markdown-файлами, поддерживает граф связей и плагины.", tags: ["заметки", "продуктивность", "markdown", "бесплатно"], category: "productivity", url: "https://obsidian.md/", icon: "📓" },
+        { id: 2, name: "Notion", description: "Мощный комбайн для заметок, баз данных, проектов и вики. Идеален для команд и личного планирования.", tags: ["планирование", "базы данных", "collab"], category: "productivity", url: "https://www.notion.so/", icon: "📝" },
+        { id: 3, name: "Trello", description: "Управление задачами по методологии Канбан. Простые доски, карточки и автоматизации.", tags: ["задачи", "проекты", "kanban"], category: "productivity", url: "https://trello.com/", icon: "✅" },
+        { id: 4, name: "Todoist", description: "Элегантный планировщик задач с приоритетами, метками и кроссплатформенностью.", tags: ["todo", "списки", "напоминания"], category: "productivity", url: "https://todoist.com/", icon: "✔️" },
+        // ДИЗАЙН И ГРАФИКА
+        { id: 5, name: "Figma", description: "Веб-редактор интерфейсов, прототипирование и дизайн-системы. Бесплатный план для старта.", tags: ["дизайн", "прототипирование", "UI/UX"], category: "design", url: "https://www.figma.com/", icon: "🎨" },
+        { id: 6, name: "Canva", description: "Простой графический редактор для соцсетей, презентаций и печатных материалов. Много шаблонов.", tags: ["шаблоны", "маркетинг", "онлайн"], category: "design", url: "https://www.canva.com/", icon: "🖌️" },
+        { id: 7, name: "GIMP", description: "Мощный бесплатный аналог Photoshop для ретуши, создания иллюстраций и обработки фото.", tags: ["фотошоп", "редактор", "open source"], category: "design", url: "https://www.gimp.org/", icon: "🎨" },
+        { id: 8, name: "Inkscape", description: "Профессиональный векторный редактор (аналог Illustrator). Поддержка SVG, экспорт в PDF.", tags: ["вектор", "иллюстрации", "svg"], category: "design", url: "https://inkscape.org/", icon: "✏️" },
+        // РАЗРАБОТКА
+        { id: 9, name: "Visual Studio Code", description: "Самый популярный редактор кода. Тысячи расширений, встроенный Git, отладчик и терминал.", tags: ["код", "IDE", "редактор"], category: "dev", url: "https://code.visualstudio.com/", icon: "💻" },
+        { id: 10, name: "GitHub", description: "Крупнейшая платформа для хостинга кода, управления версиями и совместной разработки.", tags: ["git", "collab", "open source"], category: "dev", url: "https://github.com/", icon: "🐙" },
+        { id: 11, name: "Postman", description: "Тестирование API, создание коллекций запросов, автоматизация и документация.", tags: ["api", "тестирование", "rest"], category: "dev", url: "https://www.postman.com/", icon: "🚀" },
+        { id: 12, name: "Docker Desktop", description: "Контейнеризация приложений для разработки и деплоя в изолированной среде.", tags: ["контейнеры", "devops", "инфраструктура"], category: "dev", url: "https://www.docker.com/products/docker-desktop/", icon: "🐳" },
+        // УТИЛИТЫ СИСТЕМНЫЕ
+        { id: 13, name: "ShareX", description: "Скриншоты, запись экрана, загрузка файлов в облака. Мощный open-source инструмент.", tags: ["скриншоты", "запись", "утилиты"], category: "utils", url: "https://getsharex.com/", icon: "📸" },
+        { id: 14, name: "Everything", description: "Мгновенный поиск файлов на Windows по имени. Заменяет стандартный поиск.", tags: ["поиск", "файлы", "windows"], category: "utils", url: "https://www.voidtools.com/", icon: "🔍" },
+        { id: 15, name: "OBS Studio", description: "Запись видео и профессиональный стриминг. Открытый код, мощные настройки.", tags: ["streaming", "запись", "видео"], category: "utils", url: "https://obsproject.com/", icon: "🎥" },
+        { id: 16, name: "Bitwarden", description: "Менеджер паролей с открытым исходным кодом. Синхронизация между устройствами, шифрование.", tags: ["безопасность", "пароли", "шифрование"], category: "utils", url: "https://bitwarden.com/", icon: "🔒" },
+        // ОБЛАЧНЫЕ И ОБРАЗОВАТЕЛЬНЫЕ РЕСУРСЫ
+        { id: 17, name: "Google Drive", description: "15 ГБ бесплатно, интеграция с Docs, Sheets, Slides. Облачное хранилище и офисный пакет.", tags: ["cloud", "документы", "коллаборация"], category: "cloud", url: "https://drive.google.com/", icon: "☁️" },
+        { id: 18, name: "Mega", description: "Бесплатно до 20 ГБ, сквозное шифрование. Отличная альтернатива для приватности.", tags: ["хранилище", "шифрование", "big data"], category: "cloud", url: "https://mega.nz/", icon: "📁" },
+        { id: 19, name: "Coursera", description: "Курсы от ведущих университетов и компаний. Есть бесплатные курсы и финансовая помощь.", tags: ["обучение", "курсы", "сертификаты"], category: "learning", url: "https://www.coursera.org/", icon: "🎓" },
+        { id: 20, name: "Khan Academy", description: "Бесплатное образование по математике, науке, программированию и многому другому.", tags: ["математика", "бесплатно", "школьникам"], category: "learning", url: "https://www.khanacademy.org/", icon: "📚" },
+        { id: 21, name: "Duolingo", description: "Изучение языков в игровой форме. Бесплатно, весело, эффективно для базы.", tags: ["языки", "игровой", "тренажёр"], category: "learning", url: "https://www.duolingo.com/", icon: "🗣️" },
+        { id: 22, name: "Figma Community", description: "Тысячи бесплатных UI-китов, иконок и плагинов от дизайнеров со всего мира.", tags: ["ресурсы", "дизайн", "шаблоны"], category: "design", url: "https://www.figma.com/community", icon: "🧩" }
+    ];
+
+    // Категории для фильтров (название и ключ)
+    const categoriesMap = [
+        { key: "all", label: "Все 🔥" },
+        { key: "productivity", label: "Продуктивность" },
+        { key: "design", label: "Дизайн & графика" },
+        { key: "dev", label: "Разработка" },
+        { key: "utils", label: "Системные утилиты" },
+        { key: "cloud", label: "Облачные сервисы" },
+        { key: "learning", label: "Образование" }
+    ];
+
+    // состояние
+    let activeCategory = "all";
+    let searchQuery = "";
+
+    // DOM элементы
+    const gridContainer = document.getElementById("resourcesGrid");
+    const categoriesContainer = document.getElementById("categoriesContainer");
+    const searchInput = document.getElementById("searchInput");
+    const clearBtn = document.getElementById("clearSearchBtn");
+    const resultCountSpan = document.getElementById("resultCount");
+
+    // Функция фильтрации (категория + поиск)
+    function getFilteredResources() {
+        let filtered = [...resources];
+        // фильтр по категории
+        if (activeCategory !== "all") {
+            filtered = filtered.filter(res => res.category === activeCategory);
+        }
+        // поиск по name, description, tags
+        if (searchQuery.trim() !== "") {
+            const queryLower = searchQuery.trim().toLowerCase();
+            filtered = filtered.filter(res => {
+                const nameMatch = res.name.toLowerCase().includes(queryLower);
+                const descMatch = res.description.toLowerCase().includes(queryLower);
+                const tagsMatch = res.tags.some(tag => tag.toLowerCase().includes(queryLower));
+                return nameMatch || descMatch || tagsMatch;
+            });
+        }
+        return filtered;
+    }
+
+    // отрисовка карточек
+    function renderResources() {
+        const filtered = getFilteredResources();
+        resultCountSpan.innerText = `найдено: ${filtered.length}`;
+
+        if (filtered.length === 0) {
+            gridContainer.innerHTML = `<div class="no-results">
+                <div style="font-size: 3rem;">🔍</div>
+                <h3 style="margin: 16px 0 8px;">Ничего не найдено</h3>
+                <p>Попробуйте изменить поисковый запрос или выберите другую категорию</p>
+                <button class="btn btn-primary" id="resetAllBtn" style="margin-top: 20px;">Показать все ресурсы</button>
+            </div>`;
+            const resetBtn = document.getElementById("resetAllBtn");
+            if (resetBtn) {
+                resetBtn.addEventListener("click", () => {
+                    searchInput.value = "";
+                    searchQuery = "";
+                    activeCategory = "all";
+                    updateActiveCategoryUI();
+                    renderResources();
+                });
+            }
+            return;
+        }
+
+        gridContainer.innerHTML = filtered.map(res => `
+            <div class="card">
+                <div class="card-icon">${res.icon}</div>
+                <div class="card-title">${escapeHtml(res.name)}</div>
+                <div class="card-desc">${escapeHtml(res.description)}</div>
+                <div class="card-tags">
+                    ${res.tags.map(tag => `<span class="tag">#${escapeHtml(tag)}</span>`).join('')}
+                </div>
+                <a href="${res.url}" class="card-link" target="_blank" rel="noopener noreferrer">
+                    Перейти на сайт → 
+                </a>
+            </div>
+        `).join('');
+    }
+
+    // простая защита от XSS
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    // обновление active класса у кнопок категорий
+    function updateActiveCategoryUI() {
+        const btns = document.querySelectorAll(".cat-btn");
+        btns.forEach(btn => {
+            const catKey = btn.getAttribute("data-cat");
+            if (catKey === activeCategory) {
+                btn.classList.add("active");
+            } else {
+                btn.classList.remove("active");
+            }
+        });
+    }
+
+    // отрисовать кнопки категорий
+    function renderCategories() {
+        categoriesContainer.innerHTML = "";
+        categoriesMap.forEach(cat => {
+            const button = document.createElement("button");
+            button.className = "cat-btn";
+            if (cat.key === activeCategory) button.classList.add("active");
+            button.textContent = cat.label;
+            button.setAttribute("data-cat", cat.key);
+            button.addEventListener("click", () => {
+                activeCategory = cat.key;
+                updateActiveCategoryUI();
+                renderResources();
+            });
+            categoriesContainer.appendChild(button);
+        });
+    }
+
+    // инициализация слушателей поиска
+    function bindSearchEvents() {
+        searchInput.addEventListener("input", (e) => {
+            searchQuery = e.target.value;
+            renderResources();
+        });
+        clearBtn.addEventListener("click", () => {
+            searchInput.value = "";
+            searchQuery = "";
+            renderResources();
+        });
+    }
+
+    // Начальный рендер
+    function init() {
+        renderCategories();
+        bindSearchEvents();
+        renderResources();
+    }
+
+    init();
+</script>
+</body>
+</html>

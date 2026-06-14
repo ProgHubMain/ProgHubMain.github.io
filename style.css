@@ -1,0 +1,236 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0f0f1a;
+  --surface: #1a1a2e;
+  --surface-light: #252545;
+  --border: #3d3d6b;
+  --text: #e8e8f0;
+  --text-muted: #8888aa;
+  --accent: #6c5ce7;
+  --accent-hover: #7d6ff0;
+  --grid-line: #2a2a4a;
+}
+
+body {
+  min-height: 100vh;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(108, 92, 231, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(108, 92, 231, 0.1) 0%, transparent 50%);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.app {
+  width: 100%;
+  max-width: 720px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.game-container {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 140px;
+}
+
+.stat-box,
+.preview-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+#next {
+  display: block;
+  margin: 0.5rem auto 0;
+  border-radius: 8px;
+  background: var(--surface-light);
+}
+
+.board-wrapper {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 2px var(--border),
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 0 60px rgba(108, 92, 231, 0.05);
+}
+
+#board {
+  display: block;
+  background: var(--surface);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 15, 26, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.overlay-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.overlay-content h2 {
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.overlay-content p {
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.controls {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.controls h3 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.controls ul {
+  list-style: none;
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+
+kbd {
+  display: inline-block;
+  background: var(--surface-light);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1em 0.45em;
+  font-family: inherit;
+  font-size: 0.8em;
+  color: var(--text);
+}
+
+.btn {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: var(--surface-light);
+  color: var(--text);
+  border: 1px solid var(--border);
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn:hover {
+  background: var(--border);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  width: 100%;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+@media (max-width: 600px) {
+  .game-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .panel-left {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .panel-left .stat-box {
+    flex: 1;
+    min-width: 90px;
+  }
+
+  #board {
+    width: 240px;
+    height: 480px;
+  }
+}

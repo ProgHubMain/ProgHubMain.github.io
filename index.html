@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тетрис</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>Тетрис</h1>
+    </header>
+
+    <main class="game-container">
+      <aside class="panel panel-left">
+        <div class="stat-box">
+          <span class="stat-label">Счёт</span>
+          <span id="score" class="stat-value">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Уровень</span>
+          <span id="level" class="stat-value">1</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Линии</span>
+          <span id="lines" class="stat-value">0</span>
+        </div>
+      </aside>
+
+      <div class="board-wrapper">
+        <canvas id="board" width="300" height="600"></canvas>
+        <div id="overlay" class="overlay hidden">
+          <div class="overlay-content">
+            <h2 id="overlay-title">Пауза</h2>
+            <p id="overlay-text">Нажмите P для продолжения</p>
+            <button id="overlay-btn" class="btn">Продолжить</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel panel-right">
+        <div class="preview-box">
+          <span class="stat-label">Следующая</span>
+          <canvas id="next" width="120" height="120"></canvas>
+        </div>
+        <div class="controls">
+          <h3>Управление</h3>
+          <ul>
+            <li><kbd>←</kbd> <kbd>→</kbd> — движение</li>
+            <li><kbd>↑</kbd> — поворот</li>
+            <li><kbd>↓</kbd> — ускорение</li>
+            <li><kbd>Space</kbd> — сброс</li>
+            <li><kbd>P</kbd> — пауза</li>
+          </ul>
+        </div>
+        <button id="start-btn" class="btn btn-primary">Новая игра</button>
+      </aside>
+    </main>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

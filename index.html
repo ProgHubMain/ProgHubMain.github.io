@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description"
+        content="БАКТО·ID — веб-приложение для биохимической идентификации микроорганизмов. Отмечайте тесты «+» и «−» — получайте ориентировочный род или вид. Методическая основа — приказ МЗ РФ № 535 от 04.11.1993.">
+    <meta name="theme-color" content="#04060b">
+    <title>БАКТО·ID — биохимическая идентификация микроорганизмов</title>
+
+    <script src="tailwind.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                screens: {
+                    xs: '380px',
+                    sm: '520px',
+                    md: '760px',
+                    lg: '980px',
+                    xl: '1240px',
+                    '2xl': '1480px',
+                },
+                extend: {
+                    colors: {
+                        ink: '#e8f4f8',
+                        dim: '#7f93a3',
+                        void: '#04060b',
+                        neon: {
+                            cyan: '#35f0ff',
+                            lime: '#b6ff3a',
+                            violet: '#7c5cff',
+                            pink: '#ff4fd8',
+                            amber: '#ffc44d',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['"Segoe UI"', 'Inter', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', '"Cascadia Mono"', 'Consolas', '"Courier New"', 'monospace'],
+                    },
+                },
+            },
+        };
+    </script>
+
+    <style>
+        :root {
+            --bg: #04060b;
+            --ink: #e8f4f8;
+            --dim: #7f93a3;
+            --cyan: #35f0ff;
+            --lime: #b6ff3a;
+            --violet: #7c5cff;
+            --pink: #ff4fd8;
+            --amber: #ffc44d;
+            --line: rgba(255, 255, 255, .09);
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            overflow-x: hidden;
+            position: relative;
+            letter-spacing: -.01em;
+        }
+
+        ::selection {
+            background: rgba(53, 240, 255, .28);
+            color: #fff;
+        }
+
+        /* ---------- ФОНОВЫЕ СЛОИ -------------------------------- */
+        .bg-aurora {
+            position: fixed;
+            inset: -25%;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(38% 42% at 18% 22%, rgba(53, 240, 255, .20), transparent 62%),
+                radial-gradient(34% 38% at 82% 12%, rgba(124, 92, 255, .22), transparent 60%),
+                radial-gradient(42% 46% at 72% 82%, rgba(182, 255, 58, .14), transparent 64%),
+                radial-gradient(30% 30% at 30% 88%, rgba(255, 79, 216, .14), transparent 62%);
+            filter: blur(40px);
+            animation: aurora 26s ease-in-out infinite alternate;
+        }
+
+        @keyframes aurora {
+            0% {
+                transform: translate3d(0, 0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate3d(2%, -3%, 0) scale(1.08);
+            }
+
+            100% {
+                transform: translate3d(-3%, 2%, 0) scale(1.03);
+            }
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, .055) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, .055) 1px, transparent 1px);
+            background-size: 64px 64px;
+            -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 5%, transparent 78%);
+            mask-image: radial-gradient(120% 90% at 50% 0%, #000 5%, transparent 78%);
+            animation: gridDrift 34s linear infinite;
+        }
+
+        @keyframes gridDrift {
+            to {
+                background-position: 64px 64px, 64px 64px;
+            }
+        }
+
+        .bg-noise {
+            position: fixed;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            opacity: .035;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        #cursorGlow {
+            position: fixed;
+            width: 620px;
+            height: 620px;
+            left: 0;
+            top: 0;
+            z-index: 1;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate3d(-50%, -50%, 0);
+            background: radial-gradient(circle, rgba(53, 240, 255, .09), rgba(53, 240, 255, .03) 42%, transparent 68%);
+            mix-blend-mode: screen;
+            opacity: 0;
+            transition: opacity .5s ease;
+        }
+
+        /* ---------- ТИПОГРАФИКА --------------------------------- */
+        .mono {
+            font-family: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+            font-variant-ligatures: none;
+        }
+
+        .display {
+            font-size: clamp(2.5rem, 7.4vw, 5.6rem);
+            line-height: .94;
+            font-weight: 800;
+            letter-spacing: -.045em;
+        }
+
+        .grad-text {
+            background: linear-gradient(102deg, #ffffff 4%, var(--cyan) 38%, var(--lime) 66%, var(--violet) 96%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .hollow {
+            color: transparent;
+            -webkit-text-stroke: 1.2px rgba(232, 244, 248, .38);
+        }
+
+        .kicker {
+            font-size: 11px;
+            letter-spacing: .34em;
+            text-transform: uppercase;
+            color: var(--dim);
+        }
+
+        .rule {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(53, 240, 255, .55), rgba(255, 255, 255, .06), transparent);
+        }
+
+        /* ---------- ПОВЕРХНОСТИ --------------------------------- */
+        .glass {
+            position: relative;
+            border-radius: 22px;
+            border: 1px solid var(--line);
+            background:
+                linear-gradient(158deg, rgba(255, 255, 255, .062), rgba(255, 255, 255, .014) 52%, rgba(255, 255, 255, .03));
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 24px 60px -34px rgba(0, 0, 0, .95), inset 0 1px 0 rgba(255, 255, 255, .06);
+            overflow: hidden;
+        }
+
+        .glass::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            background: radial-gradient(120% 80% at 50% -20%, rgba(53, 240, 255, .14), transparent 60%);
+            opacity: .8;
+        }
+
+        .card-hover {
+            transition: transform .45s cubic-bezier(.2, .7, .3, 1), border-color .35s ease, box-shadow .45s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-6px);
+            border-color: rgba(53, 240, 255, .38);
+            box-shadow: 0 30px 70px -40px rgba(53, 240, 255, .55), inset 0 1px 0 rgba(255, 255, 255, .1);
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .38rem .78rem;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, .035);
+            font-size: 11.5px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: #cfe3ec;
+        }
+
+        .btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .55rem;
+            padding: .82rem 1.5rem;
+            border-radius: 999px;
+            font-weight: 650;
+            font-size: 14.5px;
+            border: 1px solid transparent;
+            transition: transform .25s ease, box-shadow .35s ease, background .35s ease, color .25s ease;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .btn:active {
+            transform: scale(.975);
+        }
+
+        .btn-primary {
+            color: #04121a;
+            background: linear-gradient(100deg, var(--cyan), var(--lime));
+            box-shadow: 0 14px 40px -16px rgba(53, 240, 255, .8);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 20px 54px -14px rgba(182, 255, 58, .75);
+        }
+
+        .btn-ghost {
+            color: var(--ink);
+            border-color: var(--line);
+            background: rgba(255, 255, 255, .03);
+        }
+
+        .btn-ghost:hover {
+            border-color: rgba(53, 240, 255, .5);
+            background: rgba(53, 240, 255, .08);
+        }
+
+        /* ---------- НАВИГАЦИЯ ----------------------------------- */
+        .nav {
+            position: fixed;
+            inset: 0 0 auto 0;
+            z-index: 40;
+            transition: background .4s ease, border-color .4s ease, backdrop-filter .4s ease;
+            border-bottom: 1px solid transparent;
+        }
+
+        .nav.solid {
+            background: rgba(4, 6, 11, .72);
+            -webkit-backdrop-filter: blur(18px);
+            backdrop-filter: blur(18px);
+            border-bottom-color: var(--line);
+        }
+
+        .nav-link {
+            position: relative;
+            font-size: 13.5px;
+            color: #b9ccd6;
+            transition: color .25s ease;
+        }
+
+        .nav-link::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -5px;
+            height: 1px;
+            width: 0;
+            background: var(--cyan);
+            transition: width .3s ease;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .logo-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(140deg, rgba(53, 240, 255, .9), rgba(124, 92, 255, .75));
+            box-shadow: 0 8px 26px -10px rgba(53, 240, 255, .9);
+        }
+
+        /* ---------- ГЕРОЙ: ОРБИТА ------------------------------- */
+        .orb {
+            position: relative;
+            width: min(430px, 82vw);
+            aspect-ratio: 1;
+            display: grid;
+            place-items: center;
+            margin-inline: auto;
+        }
+
+        .orb-core {
+            position: absolute;
+            width: 44%;
+            height: 44%;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle at 34% 30%, rgba(255, 255, 255, .95), rgba(53, 240, 255, .6) 32%, rgba(124, 92, 255, .35) 62%, transparent 74%);
+            filter: blur(2px);
+            animation: pulseCore 5.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseCore {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: .82;
+            }
+
+            50% {
+                transform: scale(1.07);
+                opacity: 1;
+            }
+        }
+
+        .orb-ring {
+            position: absolute;
+            inset: 6%;
+            border-radius: 50%;
+            border: 1px dashed rgba(255, 255, 255, .16);
+            animation: spin 34s linear infinite;
+        }
+
+        .orb-ring.b {
+            inset: 20%;
+            border-style: solid;
+            border-color: rgba(53, 240, 255, .18);
+            animation-duration: 22s;
+            animation-direction: reverse;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .orb-chip {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .34rem .68rem;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: rgba(6, 12, 18, .82);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            font-size: 11px;
+            letter-spacing: .06em;
+            white-space: nowrap;
+            box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 1);
+        }
+
+        .orb-chip i {
+            font-style: normal;
+            font-weight: 700;
+        }
+
+        /* ---------- БЕГУЩАЯ СТРОКА ------------------------------ */
+        .marquee {
+            overflow: hidden;
+            -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+        }
+
+        .marquee-track {
+            display: flex;
+            width: max-content;
+            animation: slide 42s linear infinite;
+        }
+
+        .marquee:hover .marquee-track {
+            animation-play-state: paused;
+        }
+
+        @keyframes slide {
+            to {
+                transform: translateX(-50%);
+            }
+        }
+
+        /* ---------- ПАНЕЛЬ ТЕСТОВ ------------------------------- */
+        .tgroup-head {
+            display: flex;
+            align-items: baseline;
+            gap: .7rem;
+        }
+
+        .tgroup-head .idx {
+            font-size: 11px;
+            color: var(--cyan);
+            opacity: .85;
+        }
+
+        .tgroup-head .ttl {
+            font-size: 12px;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            color: #a9bfcb;
+        }
+
+        .tgroup-head .line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, .12), transparent);
+        }
+
+        .trow {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: .75rem;
+            padding: .45rem .6rem;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            transition: background .25s ease, border-color .25s ease;
+        }
+
+        .trow:hover {
+            background: rgba(255, 255, 255, .035);
+            border-color: rgba(255, 255, 255, .06);
+        }
+
+        .trow[data-state="-"] {
+            background: linear-gradient(90deg, rgba(255, 79, 216, .1), transparent 70%);
+            border-color: rgba(255, 79, 216, .22);
+        }
+
+        .trow[data-state="+"] {
+            background: linear-gradient(90deg, rgba(182, 255, 58, .1), transparent 70%);
+            border-color: rgba(182, 255, 58, .22);
+        }
+
+        .trow[data-state="~"] {
+            background: linear-gradient(90deg, rgba(255, 196, 77, .1), transparent 70%);
+            border-color: rgba(255, 196, 77, .22);
+        }
+
+        .tname {
+            font-size: 13.5px;
+            color: #d8e8f0;
+            line-height: 1.25;
+        }
+
+        .tseg {
+            display: inline-flex;
+            padding: 2px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: rgba(0, 0, 0, .3);
+        }
+
+        .tbtn {
+            width: 34px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #7b8f9c;
+            transition: color .2s ease, background .25s ease, box-shadow .25s ease;
+            cursor: pointer;
+        }
+
+        .tbtn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, .07);
+        }
+
+        .tbtn.on[data-v="-"] {
+            color: #ffd9f4;
+            background: rgba(255, 79, 216, .26);
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, .6);
+        }
+
+        .tbtn.on[data-v="~"] {
+            color: #ffeccd;
+            background: rgba(255, 196, 77, .24);
+            box-shadow: inset 0 0 0 1px rgba(255, 196, 77, .55);
+        }
+
+        .tbtn.on[data-v="+"] {
+            color: #eeffd1;
+            background: rgba(182, 255, 58, .24);
+            box-shadow: inset 0 0 0 1px rgba(182, 255, 58, .55);
+        }
+
+        select.app-select {
+            appearance: none;
+            background-color: rgba(0, 0, 0, .35);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: .6rem 2.2rem .6rem .9rem;
+            font-size: 13.5px;
+            color: var(--ink);
+            width: 100%;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237f93a3' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right .7rem center;
+            background-size: 16px;
+        }
+
+        select.app-select:focus-visible {
+            outline: 2px solid rgba(53, 240, 255, .55);
+            outline-offset: 2px;
+        }
+
+        .kbd {
+            display: inline-block;
+            padding: .1rem .38rem;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, .05);
+            font-size: 11px;
+            color: #b8cdd7;
+        }
+
+        /* ---------- РЕЗУЛЬТАТ ----------------------------------- */
+        .ring {
+            width: 118px;
+            height: 118px;
+            transform: rotate(-90deg);
+        }
+
+        .ring circle {
+            fill: none;
+            stroke-width: 7;
+            stroke-linecap: round;
+        }
+
+        .ring .bgc {
+            stroke: rgba(255, 255, 255, .08);
+        }
+
+        .ring .val {
+            stroke: url(#ringGrad);
+            stroke-dasharray: 326.7;
+            stroke-dashoffset: 326.7;
+            transition: stroke-dashoffset .9s cubic-bezier(.2, .8, .25, 1);
+        }
+
+        .bar {
+            height: 7px;
+            border-radius: 99px;
+            background: rgba(255, 255, 255, .08);
+            overflow: hidden;
+        }
+
+        .bar>span {
+            display: block;
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, var(--cyan), var(--lime));
+            transition: width .8s cubic-bezier(.2, .8, .25, 1);
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .2rem .55rem;
+            border-radius: 8px;
+            font-size: 11.5px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, .04);
+            color: #c3d6e0;
+        }
+
+        .tag.ok {
+            border-color: rgba(182, 255, 58, .4);
+            color: #e2ffb0;
+            background: rgba(182, 255, 58, .1);
+        }
+
+        .tag.bad {
+            border-color: rgba(255, 79, 216, .4);
+            color: #ffd6f3;
+            background: rgba(255, 79, 216, .1);
+        }
+
+        /* ---------- ПОЯВЛЕНИЕ ЭЛЕМЕНТОВ ------------------------- */
+        .rv {
+            opacity: 0;
+            transform: translateY(26px);
+            transition: opacity .8s cubic-bezier(.2, .7, .3, 1), transform .8s cubic-bezier(.2, .7, .3, 1);
+        }
+
+        .rv.in {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* ---------- ШАГИ ---------------------------------------- */
+        .step-num {
+            font-size: 3.2rem;
+            line-height: 1;
+            font-weight: 800;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(53, 240, 255, .55);
+        }
+
+        /* ---------- МЕЛОЧИ -------------------------------------- */
+        .scan {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scan::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 120px;
+            top: -140px;
+            background: linear-gradient(180deg, transparent, rgba(53, 240, 255, .12), transparent);
+            animation: scanMove 6.5s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanMove {
+            0% {
+                top: -140px;
+            }
+
+            60%,
+            100% {
+                top: 110%;
+            }
+        }
+
+        .dot-pulse {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--lime);
+            box-shadow: 0 0 0 0 rgba(182, 255, 58, .7);
+            animation: dotPulse 2.4s infinite;
+        }
+
+        @keyframes dotPulse {
+            70% {
+                box-shadow: 0 0 0 9px rgba(182, 255, 58, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(182, 255, 58, 0);
+            }
+        }
+
+        .focus-ring:focus-visible {
+            outline: 2px solid rgba(53, 240, 255, .6);
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 640px) {
+            .trow {
+                grid-template-columns: 1fr auto;
+            }
+
+            .tname {
+                font-size: 13px;
+            }
+
+            .tbtn {
+                width: 32px;
+                height: 30px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: .001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .001ms !important;
+            }
+
+            .rv {
+                opacity: 1;
+                transform: none;
+            }
+
+            html {
+                scroll-behavior: auto;
+            }
+        }
+    </style>
+</head>
+
+<body class="font-sans antialiased">
+
+    <div class="bg-aurora" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div id="cursorGlow" aria-hidden="true"></div>
+    <div class="bg-noise" aria-hidden="true"></div>
+
+    <!-- ======================= НАВИГАЦИЯ ======================= -->
+    <header class="nav" id="nav">
+        <div class="mx-auto max-w-[1240px] px-5 sm:px-8">
+            <div class="flex h-[68px] items-center justify-between gap-6">
+                <a href="#top" class="flex items-center gap-3 focus-ring rounded-xl">
+                    <span class="logo-mark">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04121a" stroke-width="2.1"
+                            stroke-linecap="round">
+                            <circle cx="12" cy="12" r="8"></circle>
+                            <path d="M8 12h8M12 8v8"></path>
+                        </svg>
+                    </span>
+                    <span class="leading-none">
+                        <span class="block text-[15px] font-bold tracking-tight">БАКТО<span
+                                class="text-neon-cyan">·</span>ID</span>
+                        <span class="mono block text-[9.5px] tracking-[.22em] text-dim">BACTO IDENTIFICATION</span>
+                    </span>
+                </a>
+
+                <nav class="hidden items-center gap-8 lg:flex">
+                    <a href="#demo" class="nav-link">Демо</a>
+                    <a href="#how" class="nav-link">Как работает</a>
+                    <a href="#base" class="nav-link">База</a>
+                    <a href="#features" class="nav-link">Возможности</a>
+                    <a href="#notice" class="nav-link">Важно</a>
+                </nav>
+
+                <a href="#demo" class="btn btn-primary !px-5 !py-2.5 !text-[13px]">Открыть панель</a>
+            </div>
+        </div>
+    </header>
+
+    <main id="top" class="relative z-[2]">
+
+        <!-- ========================= ГЕРОЙ ====================== -->
+        <section class="relative pt-[132px] pb-16 sm:pt-[160px] sm:pb-24">
+            <div class="mx-auto max-w-[1240px] px-5 sm:px-8">
+                <div class="grid items-center gap-12 lg:grid-cols-[1.15fr_.85fr] lg:gap-16">
+
+                    <div class="rv">
+                        <span class="chip">
+                            <span class="dot-pulse"></span>
+                            Приказ МЗ РФ № 535 от 04.11.1993
+                        </span>
+
+                        <h1 class="display mt-7">
+                            От «+» и «−»<br>
+                            <span class="grad-text">к роду бактерии</span>
+                        </h1>
+
+                        <p class="mt-6 max-w-[560px] text-[16.5px] leading-relaxed text-[#a8bcc7]">
+                            Веб-приложение для бактериолога: отмечайте результаты биохимических тестов выделенной
+                            культуры — система сопоставит профиль с базой и предложит вероятный род или вид
+                            микроорганизма с оценкой соответствия и подсказкой, какой тест выполнить следующим.
+                        </p>
+
+                        <div class="mt-9 flex flex-wrap items-center gap-3">
+                            <a href="#demo" class="btn btn-primary">
+                                Попробовать демо
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.2" stroke-linecap="round">
+                                    <path d="M5 12h13M13 6l6 6-6 6"></path>
+                                </svg>
+                            </a>
+                            <a href="#how" class="btn btn-ghost">Как это работает</a>
+                        </div>
+
+                        <div class="mt-10 grid max-w-[620px] grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
+                            <div>
+                                <div class="text-[26px] font-bold leading-none text-white">27</div>
+                                <div class="mono mt-1.5 text-[10px] tracking-[.16em] text-dim">ТАКСОНОВ</div>
+                            </div>
+                            <div>
+                                <div class="text-[26px] font-bold leading-none text-white">28</div>
+                                <div class="mono mt-1.5 text-[10px] tracking-[.16em] text-dim">ТЕСТОВ</div>
+                            </div>
+                            <div>
+                                <div class="text-[26px] font-bold leading-none text-white">3</div>
+                                <div class="mono mt-1.5 text-[10px] tracking-[.16em] text-dim">ГРУППЫ</div>
+                            </div>
+                            <div>
+                                <div class="text-[26px] font-bold leading-none text-white">0</div>
+                                <div class="mono mt-1.5 text-[10px] tracking-[.16em] text-dim">УСТАНОВКИ</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Орбитальная визуализация -->
+                    <div class="rv relative" style="transition-delay:.12s">
+                        <div class="orb">
+                            <div class="orb-core"></div>
+                            <div class="orb-ring"></div>
+                            <div class="orb-ring b"></div>
+                            <div id="orbitHost" class="absolute inset-0"></div>
+                        </div>
+                        <div class="glass mx-auto mt-8 max-w-[380px] px-5 py-4">
+                            <div class="flex items-center justify-between">
+                                <span class="mono text-[10px] tracking-[.2em] text-dim">ПРОФИЛЬ ОБРАЗЦА</span>
+                                <span class="tag ok">Г⁻ палочки</span>
+                            </div>
+                            <div class="rule my-3"></div>
+                            <div class="space-y-1.5 text-[12.5px] text-[#c6d9e3]">
+                                <div class="flex justify-between"><span>Лактоза</span><span
+                                        class="mono text-neon-lime">+</span></div>
+                                <div class="flex justify-between"><span>Индол</span><span
+                                        class="mono text-neon-lime">+</span></div>
+                                <div class="flex justify-between"><span>Цитрат Симмонса</span><span
+                                        class="mono text-neon-pink">−</span></div>
+                                <div class="flex justify-between"><span>Оксидаза</span><span
+                                        class="mono text-neon-pink">−</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================== БЕГУЩАЯ СТРОКА ================ -->
+        <section class="relative border-y border-white/[.07] bg-black/25 py-4">
+            <div class="marquee">
+                <div class="marquee-track mono gap-8 text-[11.5px] tracking-[.24em] text-[#8ea6b2]">
+                    <span id="mqA" class="flex shrink-0 gap-8 pr-8"></span>
+                    <span id="mqB" class="flex shrink-0 gap-8 pr-8"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================= ДЕМО ======================= -->
+        <section id="demo" class="scroll-mt-24 py-20 sm:py-28">
+            <div class="mx-auto max-w-[1240px] px-5 sm:px-8">
+
+                <div class="rv mb-10 max-w-[720px]">
+                    <span class="kicker">01 — рабочая панель</span>
+                    <h2 class="mt-4 text-[clamp(1.8rem,4vw,2.9rem)] font-bold leading-[1.06] tracking-tight">
+                        Отметьте тесты — получите <span class="grad-text">предположительный ответ</span>
+                    </h2>
+                    <p class="mt-4 text-[15.5px] leading-relaxed text-[#9fb4c0]">
+                        Каждый тест имеет три состояния: «+», «−» и «±» (вариабельный/лабильный признак). Пока тестов
+                        отмечено мало, вывод помечается как предварительный. Ниже — реальный расчётный алгоритм
+                        демо-версии.
+                    </p>
+                </div>
+
+                <div class="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+
+                    <!-- ---- панель тестов ---- -->
+                    <div class="glass scan rv p-5 sm:p-7">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <span class="dot-pulse"></span>
+                                <span class="mono text-[11px] tracking-[.22em] text-[#a9bfcb]">ПАНЕЛЬ БИОХИМИЧЕСКИХ
+                                    ТЕСТОВ</span>
+                            </div>
+                            <span class="mono text-[11px] text-dim">отмечено: <b id="cntMarked"
+                                    class="text-neon-cyan">0</b> / 28</span>
+                        </div>
+
+                        <div class="rule my-5"></div>
+
+                        <!-- морфология -->
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <label class="block">
+                                <span class="mono mb-2 block text-[10px] tracking-[.2em] text-dim">МИКРОСКОПИЯ / ОКРАСКА
+                                    ПО ГРАМУ</span>
+                                <select id="morphSel" class="app-select">
+                                    <option value="">— не определено —</option>
+                                    <option value="gneg_rod">Грамотрицательные палочки</option>
+                                    <option value="gpos_cocci">Грамположительные кокки</option>
+                                    <option value="gpos_rod">Грамположительные палочки</option>
+                                    <option value="gneg_cocci">Грамотрицательные кокки</option>
+                                </select>
+                            </label>
+                            <div>
+                                <span class="mono mb-2 block text-[10px] tracking-[.2em] text-dim">ПРЕСЕТЫ
+                                    ПРОФИЛЯ</span>
+                                <div class="flex flex-wrap gap-2">
+                                    <button class="chip focus-ring hover:border-neon-cyan/50" data-preset="ecoli">E.
+                                        coli</button>
+                                    <button class="chip focus-ring hover:border-neon-cyan/50" data-preset="paer">P.
+                                        aeruginosa</button>
+                                    <button class="chip focus-ring hover:border-neon-cyan/50" data-preset="saureus">S.
+                                        aureus</button>
+                                    <button class="chip focus-ring hover:border-neon-cyan/50" data-preset="kpneu">K.
+                                        pneumoniae</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="rule my-6"></div>
+
+                        <!-- группы тестов -->
+                        <div id="testHost" class="space-y-7"></div>
+
+                        <div class="rule my-6"></div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div class="text-[12px] text-dim">
+                                Нажмите ещё раз на активное значение, чтобы снять отметку.
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="btnRandom" class="btn btn-ghost !px-4 !py-2 !text-[12.5px]">Случайный
+                                    профиль</button>
+                                <button id="btnReset" class="btn btn-ghost !px-4 !py-2 !text-[12.5px]">Сбросить</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ---- результат ---- -->
+                    <aside class="self-start lg:sticky lg:top-[92px]">
+                        <div class="glass rv p-6" style="transition-delay:.1s">
+                            <div class="flex items-center justify-between">
+                                <span class="mono text-[10px] tracking-[.22em] text-dim">ПРЕДПОЛОЖИТЕЛЬНЫЙ ОТВЕТ</span>
+                                <span class="mono text-[10px] text-dim" id="stamp"></span>
+                            </div>
+
+                            <!-- пустое состояние -->
+                            <div id="empty" class="py-10 text-center">
+                                <div
+                                    class="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-white/10 bg-white/5">
+                                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7f93a3"
+                                        stroke-width="1.6" stroke-linecap="round">
+                                        <path d="M9 3v6l-5 9a2 2 0 0 0 1.8 3h12.4A2 2 0 0 0 20 18l-5-9V3"></path>
+                                        <path d="M8 3h8"></path>
+                                    </svg>
+                                </div>
+                                <p class="mt-5 text-[14px] text-[#9fb4c0]">
+                                    Отметьте минимум <b class="text-white">3 теста</b>, чтобы система построила
+                                    предполагаемый профиль.
+                                </p>
+                            </div>
+
+                            <!-- результат -->
+                            <div id="result" class="hidden">
+                                <div class="flex items-center gap-5">
+                                    <div class="relative grid shrink-0 place-items-center">
+                                        <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+                                            <defs>
+                                                <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                                                    <stop offset="0%" stop-color="#35f0ff" />
+                                                    <stop offset="100%" stop-color="#b6ff3a" />
+                                                </linearGradient>
+                                            </defs>
+                                            <circle class="bgc" cx="60" cy="60" r="52"></circle>
+                                            <circle class="val" id="ringVal" cx="60" cy="60" r="52"></circle>
+                                        </svg>
+                                        <div class="absolute text-center">
+                                            <div class="text-[22px] font-bold leading-none" id="confNum">0%</div>
+                                            <div class="mono text-[8.5px] tracking-[.14em] text-dim">СООТВЕТСТВИЕ</div>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="mono text-[10px] tracking-[.18em] text-neon-cyan" id="rankLabel">
+                                            НАИЛУЧШЕЕ СОВПАДЕНИЕ</div>
+                                        <div class="mt-2 text-[21px] font-bold italic leading-tight" id="topName">—
+                                        </div>
+                                        <div class="mt-2 text-[12px] text-dim" id="topFamily"></div>
+                                        <div class="mt-3 flex flex-wrap gap-2" id="topTags"></div>
+                                    </div>
+                                </div>
+
+                                <div class="rule my-5"></div>
+
+                                <div class="mono mb-3 text-[10px] tracking-[.2em] text-dim">ВЕРОЯТНЫЕ АЛЬТЕРНАТИВЫ</div>
+                                <div id="alts" class="space-y-3"></div>
+
+                                <div id="divergeWrap" class="hidden">
+                                    <div class="rule my-5"></div>
+                                    <div class="mono mb-3 text-[10px] tracking-[.2em] text-dim">РАСХОЖДЕНИЯ С ЛИДЕРОМ
+                                    </div>
+                                    <div id="diverge" class="flex flex-wrap gap-2"></div>
+                                </div>
+
+                                <div id="nextWrap"
+                                    class="hidden mt-5 rounded-2xl border border-neon-cyan/25 bg-neon-cyan/[.07] p-4">
+                                    <div class="mono text-[10px] tracking-[.2em] text-neon-cyan">СЛЕДУЮЩИЙ ШАГ</div>
+                                    <div class="mt-2 text-[13.5px] text-[#d6e8f0]" id="nextStep"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="mono mt-4 px-2 text-[10.5px] leading-relaxed text-dim">
+                            Ориентировочный результат. Не является заключением и требует подтверждения референсными
+                            методами.
+                        </p>
+                    </aside>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================== КАК РАБОТАЕТ ================== -->
+        <section id="how" class="scroll-mt-24 border-y border-white/[.07] bg-black/20 py-20 sm:py-28">
+            <div class="mx-auto max-w-[1240px] px-5 sm:px-8">
+                <div class="rv max-w-[680px]">
+                    <span class="kicker">02 — порядок работы</span>
+                    <h2 class="mt-4 text-[clamp(1.8rem,4vw,2.9rem)] font-bold leading-[1.06] tracking-tight">
+                        Четыре шага от культуры <span class="hollow">до рода</span>
+                    </h2>
+                </div>
+
+                <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                    <div class="glass card-hover rv p-6">
+                        <div class="step-num mono">01</div>
+                        <h3 class="mt-5 text-[17px] font-semibold">Морфология и окраска</h3>
+                        <p class="mt-3 text-[13.5px] leading-relaxed text-[#9fb4c0]">
+                            Отметьте результат микроскопии: грамотрицательные палочки, грамположительные кокки и т. д.
+                            Это сразу отсекает неподходящие группы.
+                        </p>
+                    </div>
+                    <div class="glass card-hover rv p-6" style="transition-delay:.08s">
+                        <div class="step-num mono">02</div>
+                        <h3 class="mt-5 text-[17px] font-semibold">Биохимические тесты</h3>
+                        <p class="mt-3 text-[13.5px] leading-relaxed text-[#9fb4c0]">
+                            Проставьте «+», «−» или «±» по средам Гисса, среде Кligler, цитрату Симмонса, тестам ВП/МР,
+                            индолу, уреазе и другим признакам.
+                        </p>
+                    </div>
+                    <div class="glass card-hover rv p-6" style="transition-delay:.16s">
+                        <div class="step-num mono">03</div>
+                        <h3 class="mt-5 text-[17px] font-semibold">Сопоставление профиля</h3>
+                        <p class="mt-3 text-[13.5px] leading-relaxed text-[#9fb4c0]">
+                            Алгоритм сравнивает ваш набор признаков с эталонными профилями базы. Вариабельные признаки
+                            учитываются с меньшим весом.
+                        </p>
+                    </div>
+                    <div class="glass card-hover rv p-6" style="transition-delay:.24s">
+                        <div class="step-num mono">04</div>
+                        <h3 class="mt-5 text-[17px] font-semibold">Ранжированный ответ</h3>
+                        <p class="mt-3 text-[13.5px] leading-relaxed text-[#9fb4c0]">
+                            Получите список вероятных таксонов с процентом соответствия, расхождениями и подсказкой о
+                            следующем дифференцирующем тесте.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================= БАЗА ======================= -->
+        <section id="base" class="scroll-mt-24 py-20 sm:py-28">
+            <div class="mx-auto max-w-[1240px] px-5 sm:px-8">
+                <div class="rv max-w-[720px]">
+                    <span class="kicker">03 — охват базы</span>
+                    <h2 class="mt-4 text-[clamp(1.8rem,4vw,2.9rem)] font-bold leading-[1.06] tracking-tight">
+                        Три группы микроорганизмов
+                    </h2>
+                    <p class="mt-4 text-[15.5px] leading-relaxed text-[#9fb4c0]">
+                        Схемы идентификации построены по логике приказа № 535: от ориентационных признаков к
+                        дифференцирующим, с раздельным набором тестов для энтеробактерий, неферментирующих бактерий и
+                        грамположительных кокков.
+                    </p>
+                </div>
+
+                <div class="mt-12 grid gap-6 lg:grid-cols-3">
+                    <div class="glass card-hover rv p-6">
+                        <div class="flex items-center justify-between">
+                            <span class="mono text-[10px] tracking-[.2em] text-neon-cyan">ГРУППА A</span>
+                            <span class="tag">12 таксонов</span>
+                        </div>
+                        <h3 class="mt-4 text-[19px] font-semibold">Энтеробактерии</h3>
+                        <p class="mono mt-1 text-[11px] tracking-[.1em] text-dim">ENTEROBACTERIACEAE</p>
+                        <div class="rule my-5"></div>
+                        <ul class="space-y-2.5 text-[13.5px] text-[#b6c9d4]">
+                            <li>• Лактоза, глюкоза с газом, H₂S</li>
+                            <li>• Индол, уреаза, цитрат Симмонса</li>
+                            <li>• ВП / метиловый красный</li>
+                            <li>• Лизиндекарбоксилаза, фенилаланин</li>
+                            <li>• Подвижность, сахара (маннит, инозитол, салицин)</li>
+                        </ul>
+                        <div class="rule my-5"></div>
+                        <p class="text-[12.5px] leading-relaxed text-dim">
+                            E. coli, Klebsiella, Salmonella, Shigella, Proteus, Enterobacter, Citrobacter, Serratia,
+                            Yersinia.
+                        </p>
+                    </div>
+
+                    <div class="glass card-hover rv p-6" style="transition-delay:.1s">
+                        <div class="flex items-center justify-between">
+                            <span class="mono text-[10px] tracking-[.2em] text-neon-lime">ГРУППА B</span>
+                            <span class="tag">5 таксонов</span>
+                        </div>
+                        <h3 class="mt-4 text-[19px] font-semibold">Неферментирующие</h3>
+                        <p class="mono mt-1 text-[11px] tracking-[.1em] text-dim">NON-FERMENTERS</p>
+                        <div class="rule my-5"></div>
+                        <ul class="space-y-2.5 text-[13.5px] text-[#b6c9d4]">
+                            <li>• Оксидаза — ключевой признак</li>
+                            <li>• Окисление глюкозы (тест Хью–Лейфсона)</li>
+                            <li>• Рост при 42 °C и 44 °C</li>
+                            <li>• Пигмент (пиоцианин, флуоресцеин)</li>
+                            <li>• ДНКаза, лизиндекарбоксилаза</li>
+                        </ul>
+                        <div class="rule my-5"></div>
+                        <p class="text-[12.5px] leading-relaxed text-dim">
+                            Pseudomonas aeruginosa и fluorescens, Acinetobacter baumannii, Stenotrophomonas maltophilia,
+                            Burkholderia cepacia.
+                        </p>
+                    </div>
+
+                    <div class="glass card-hover rv p-6" style="transition-delay:.2s">
+                        <div class="flex items-center justify-between">
+                            <span class="mono text-[10px] tracking-[.2em] text-neon-violet">ГРУППА C</span>
+                            <span class="tag">10 таксонов</span>
+                        </div>
+                        <h3 class="mt-4 text-[19px] font-semibold">Грамположительные</h3>
+                        <p class="mono mt-1 text-[11px] tracking-[.1em] text-dim">COCCI &amp; RODS</p>
+                        <div class="rule my-5"></div>
+                        <ul class="space-y-2.5 text-[13.5px] text-[#b6c9d4]">
+                            <li>• Каталаза, коагулаза</li>
+                            <li>• Маннит в аэробных условиях, ДНКаза</li>
+                            <li>• Оптохин и бацитрацин (чувствительность)</li>
+                            <li>• CAMP-тест, рост в 6,5 % NaCl</li>
+                            <li>• Гемолиз, пигмент, подвижность</li>
+                        </ul>
+                        <div class="rule my-5"></div>
+                        <p class="text-[12.5px] leading-relaxed text-dim">
+                            Staphylococcus aureus / epidermidis / saprophyticus, Streptococcus pyogenes / pneumoniae /
+                            agalactiae, Enterococcus faecalis, Bacillus cereus, Listeria monocytogenes.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================== ВОЗМОЖНОСТИ ================== -->
+        <section id="features" class="scroll-mt-24 border-y border-white/[.07] bg-black/20 py-20 sm:py-28">
+            <div class="mx-auto max-w-[1240px] px-5 sm:px-8">
+                <div class="rv max-w-[680px]">
+                    <span class="kicker">04 — возможности</span>
+                    <h2 class="mt-4 text-[clamp(1.8rem,4vw,2.9rem)] font-bold leading-[1.06] tracking-tight">
+                        Что даёт приложение
+                    </h2>
+                </div>
+
+                <div class="mt-12 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    <div class="glass card-hover rv p-6">
+                        <h3 class="text-[16.5px] font-semibold">Вся панель на одном экране</h3>
+                        <p class="mt-3 text-[13.5px] leading-relaxed text-[#9fb4c0]">
+                            28 тестов, сгруппированных по смыслу: ориентационные, углеводы, метаболические,
+                            дифференциация кокков. Никаких переходов между таблицами.
+                        </p>
+                    </div>
+                    <div class="glass card-hover rv p-5 sm:p-6" style="transition-delay:.06s">
+                        <h3 class="text-[16.5px] font-semibold">Взвешенная оценка</h3>
+                        <p class="mt-3 text-[13.5px] leading-relaxed text-[#9fb4c0]">
+                            Вариабельные признаки («±») не ломают вывод, а снижают уверенность — так же, как в реальной
+                            интерпретации биохимического ряда.
+                        </p>
+                    </div>
+                    <div class="glass card-hover rv p-6" style="transition-delay:.12s">
+                        <h3 class="text-[16.5px] font-semibold">Прозрачность вывода</h3>
+                        <p class="mt-3 text-[13.5px] leading-relaxed text-[#9fb4c0]">
+                            Видно, какие тесты противоречат лидеру и какой один тест надёжнее всего разведёт два
+                            первых варианта.
+                        </p>
+                    </div>
+                    <div class="glass card-hover rv p-6" style="transition-delay:.18s">
+                        <h3 class="text-[16.5px] font-semibold">Опора на приказ № 535</h3>
+                        <p class="mt-3 text-[13.5px] leading-relaxed text-[#9fb4c0]">
+                            Наборы тестов и логика дифференциации соответствуют унифицированным микробиологическим
+                            методам, применяемым в КДЛ.
+                        </p>
+                    </div>
+                    <div class="glass card-hover rv p-6" style="transition-delay:.24s">
+                        <h3 class="text-[16.5px] font-semibold">Работает офлайн</h3>
+                        <p class="mt-3 text-[13.5px] leading-relaxed text-[#9fb4c0]">
+                            Один файл в браузере: без сервера, установки и интернета. Данные никуда не отправляются —
+                            всё считается локально.
+                        </p>
+                    </div>
+                    <div class="glass card-hover rv p-6" style="transition-delay:.3s">
+                        <h3 class="text-[16.5px] font-semibold">Для работы и обучения</h3>
+                        <p class="mt-3 text-[13.5px] leading-relaxed text-[#9fb4c0]">
+                            Скрининг в рутине, самопроверка интерпретации, разбор типовых схем на практических занятиях.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- для кого -->
+                <div class="mt-14 grid gap-5 sm:grid-cols-3">
+                    <div class="rv rounded-2xl border border-white/[.08] p-6">
+                        <div class="mono text-[10px] tracking-[.2em] text-dim">ПРОФИЛЬ</div>
+                        <div class="mt-3 text-[17px] font-semibold">Врач-бактериолог КДЛ</div>
+                        <p class="mt-2 text-[13px] leading-relaxed text-[#9fb4c0]">Быстрая проверка версии по
+                            биохимическому ряду до подтверждения на АПИ-системе.</p>
+                    </div>
+                    <div class="rv rounded-2xl border border-white/[.08] p-6" style="transition-delay:.08s">
+                        <div class="mono text-[10px] tracking-[.2em] text-dim">ПРОФИЛЬ</div>
+                        <div class="mt-3 text-[17px] font-semibold">Студент-медик</div>
+                        <p class="mt-2 text-[13px] leading-relaxed text-[#9fb4c0]">Тренажёр: отмечайте тесты и сразу
+                            видите, как признак меняет предполагаемый род.</p>
+                    </div>
+                    <div class="rv rounded-2xl border border-white/[.08] p-6" style="transition-delay:.16s">
+                        <div class="mono text-[10px] tracking-[.2em] text-dim">ПРОФИЛЬ</div>
+                        <div class="mt-3 text-[17px] font-semibold">Преподаватель</div>
+                        <p class="mt-2 text-[13px] leading-relaxed text-[#9fb4c0]">Готовые схемы дифференциации для
+                            разбора на занятии без доступа к лабораторной базе.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ======================== ВАЖНО ======================= -->
+        <section id="notice" class="scroll-mt-24 py-20 sm:py-24">
+            <div class="mx-auto max-w-[1240px] px-5 sm:px-8">
+                <div class="glass rv overflow-hidden p-7 sm:p-10">
+                    <div class="grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
+                        <div>
+                            <span class="kicker">ограничения метода</span>
+                            <h2 class="mt-4 text-[clamp(1.5rem,3vw,2.1rem)] font-bold leading-tight tracking-tight">
+                                Инструмент подсказывает, <span class="grad-text">решение принимает специалист</span>
+                            </h2>
+                        </div>
+                        <ul class="space-y-4 text-[13.5px] leading-relaxed text-[#a8bcc7]">
+                            <li class="flex gap-3"><span class="mono text-neon-cyan">01</span> Ответ носит
+                                ориентировочный
+                                характер и не заменяет заключение лаборатории.</li>
+                            <li class="flex gap-3"><span class="mono text-neon-cyan">02</span> Достоверная идентификация
+                                требует чистой культуры, стандартизованного инокулята и контроля сред.</li>
+                            <li class="flex gap-3"><span class="mono text-neon-cyan">03</span> Спорные и клинически
+                                значимые изоляты подтверждаются референсными методами: автоматические АПИ-системы,
+                                MALDI-TOF, ПЦР, серотипирование.</li>
+                            <li class="flex gap-3"><span class="mono text-neon-cyan">04</span> База ориентирована на
+                                рутинно встречающиеся возбудители и не охватывает редкие и некультивируемые формы.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================= CTA ======================== -->
+        <section class="pb-24 sm:pb-32">
+            <div class="mx-auto max-w-[1240px] px-5 sm:px-8">
+                <div
+                    class="rv relative overflow-hidden rounded-[26px] border border-neon-cyan/25 bg-gradient-to-br from-neon-cyan/[.1] via-transparent to-neon-violet/[.12] p-8 text-center sm:p-14">
+                    <h2 class="display !text-[clamp(1.9rem,5vw,3.4rem)]">
+                        Открыть панель<br><span class="grad-text">и отметить тесты</span>
+                    </h2>
+                    <p class="mx-auto mt-5 max-w-[560px] text-[15px] leading-relaxed text-[#a8bcc7]">
+                        Демо-расчёт работает прямо на этой странице: пролистайте к разделу «Рабочая панель» и отметьте
+                        результаты своих тестов.
+                    </p>
+                    <div class="mt-9 flex flex-wrap justify-center gap-3">
+                        <a href="#demo" class="btn btn-primary">Перейти к панели</a>
+                        <a href="#base" class="btn btn-ghost">Посмотреть базу</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ======================== ПОДВАЛ ======================== -->
+    <footer class="relative z-[2] border-t border-white/[.08] py-10">
+        <div class="mx-auto max-w-[1240px] px-5 sm:px-8">
+            <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="logo-mark">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#04121a" stroke-width="2.1"
+                            stroke-linecap="round">
+                            <circle cx="12" cy="12" r="8"></circle>
+                            <path d="M8 12h8M12 8v8"></path>
+                        </svg>
+                    </span>
+                    <div>
+                        <div class="text-[14px] font-bold">БАКТО·ID</div>
+                        <div class="mono text-[10px] tracking-[.18em] text-dim">БИОХИМИЧЕСКАЯ ИДЕНТИФИКАЦИЯ</div>
+                    </div>
+                </div>
+                <div class="mono text-[10.5px] leading-relaxed tracking-[.06em] text-dim">
+                    МЕТОДИЧЕСКАЯ ОСНОВА: ПРИКАЗ МЗ РФ № 535 ОТ 04.11.1993<br>
+                    ДЕМО-ВЕРСИЯ · ОРИЕНТИРОВОЧНЫЕ РЕЗУЛЬТАТЫ · 2026
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ======================== ЛОГИКА ======================== -->
+    <script>
+        (function () {
+            "use strict";
+
+            /* ---------------- СПРАВОЧНИК ТЕСТОВ ---------------- */
+            const GROUPS = [
+                { id: "or", idx: "01", title: "Ориентационные признаки" },
+                { id: "carb", idx: "02", title: "Углеводы (среды Гисса)" },
+                { id: "met", idx: "03", title: "Метаболические тесты" },
+                { id: "cocci", idx: "04", title: "Дифференциация кокков" }
+            ];
+
+            const TESTS = [
+                { id: "oxi", l: "Оксидаза", g: "or" },
+                { id: "cat", l: "Каталаза", g: "or" },
+                { id: "mot", l: "Подвижность", g: "or" },
+                { id: "o42", l: "Рост при 42 °C", g: "or" },
+                { id: "o44", l: "Рост при 44 °C", g: "or" },
+
+                { id: "lac", l: "Лактоза", g: "carb" },
+                { id: "glu", l: "Глюкоза (кислота / газ)", g: "carb" },
+                { id: "man", l: "Маннит", g: "carb" },
+                { id: "ino", l: "Инозитол", g: "carb" },
+                { id: "sal", l: "Салицин", g: "carb" },
+                { id: "ara", l: "Арабиноза", g: "carb" },
+                { id: "mal", l: "Мальтоза", g: "carb" },
+                { id: "suc", l: "Сахароза", g: "carb" },
+
+                { id: "h2s", l: "Сероводород (H₂S)", g: "met" },
+                { id: "ind", l: "Индол", g: "met" },
+                { id: "ure", l: "Уреаза", g: "met" },
+                { id: "cit", l: "Цитрат Симмонса", g: "met" },
+                { id: "vp", l: "Фогеса–Проскауэра (ВП)", g: "met" },
+                { id: "mr", l: "Метиловый красный", g: "met" },
+                { id: "ldc", l: "Лизиндекарбоксилаза", g: "met" },
+                { id: "pd", l: "Фенилаланиндезаминаза", g: "met" },
+                { id: "dnl", l: "ДНКаза", g: "met" },
+                { id: "pig", l: "Пигмент", g: "met" },
+
+                { id: "coa", l: "Коагулаза", g: "cocci" },
+                { id: "opt", l: "Оптохин (чувствительность)", g: "cocci" },
+                { id: "bac", l: "Бацитрацин (чувствительность)", g: "cocci" },
+                { id: "camp", l: "CAMP-тест", g: "cocci" },
+                { id: "salt", l: "Рост в 6,5 % NaCl", g: "cocci" }
+            ];
+
+            const TEST_LABEL = {};
+            TESTS.forEach(function (t) { TEST_LABEL[t.id] = t.l; });
+
+            /* ---------------- БАЗА ПРОФИЛЕЙ ----------------
+               "+" — положительно, "-" — отрицательно,
+               "~" — вариабельный (лабильный) признак,
+               отсутствие ключа — признак не оценивается.   */
+            const ORGANISMS = [
+                /* ---- Энтеробактерии ---- */
+                {
+                    id: "ecoli", n: "Escherichia coli", g: "Escherichia", fam: "Enterobacteriaceae", m: "gneg_rod",
+                    note: "Лактоза «+», индол «+», цитрат «−» — классический профиль.",
+                    t: { oxi: "-", cat: "+", mot: "+", lac: "+", glu: "+", h2s: "-", ind: "+", ure: "-", cit: "-", vp: "-", mr: "+", ldc: "+", pd: "-", man: "+", ino: "-", sal: "-", ara: "+", mal: "+", suc: "~", dnl: "-", pig: "-", o42: "~", coa: "-" }
+                },
+                {
+                    id: "kpneu", n: "Klebsiella pneumoniae", g: "Klebsiella", fam: "Enterobacteriaceae", m: "gneg_rod",
+                    note: "Неподвижна, цитрат «+», ВП «+», инозитол «+», выраженная капсула.",
+                    t: { oxi: "-", cat: "+", mot: "-", lac: "+", glu: "+", h2s: "-", ind: "-", ure: "+", cit: "+", vp: "+", mr: "-", ldc: "+", pd: "-", man: "+", ino: "+", sal: "+", ara: "+", mal: "+", suc: "+", dnl: "-", pig: "-", o42: "-", coa: "-" }
+                },
+                {
+                    id: "koxy", n: "Klebsiella oxytoca", g: "Klebsiella", fam: "Enterobacteriaceae", m: "gneg_rod",
+                    note: "Отличается от K. pneumoniae индол-положительной реакцией.",
+                    t: { oxi: "-", cat: "+", mot: "-", lac: "+", glu: "+", h2s: "-", ind: "+", ure: "+", cit: "+", vp: "+", mr: "-", ldc: "+", pd: "-", man: "+", ino: "+", sal: "+", ara: "+", mal: "+", suc: "+", dnl: "-", pig: "-", o42: "-", coa: "-" }
+                },
+                {
+                    id: "salmonella", n: "Salmonella enterica spp.", g: "Salmonella", fam: "Enterobacteriaceae", m: "gneg_rod",
+                    note: "H₂S «+», лактоза «−», уреаза «−» — типовой профиль сальмонелл.",
+                    t: { oxi: "-", cat: "+", mot: "+", lac: "-", glu: "+", h2s: "+", ind: "-", ure: "-", cit: "+", vp: "-", mr: "+", ldc: "+", pd: "-", man: "+", ino: "-", sal: "-", ara: "~", mal: "-", suc: "-", dnl: "-", pig: "-", o42: "+", coa: "-" }
+                },
+                {
+                    id: "styphi", n: "Salmonella Typhi", g: "Salmonella", fam: "Enterobacteriaceae", m: "gneg_rod",
+                    note: "H₂S слабо «+»/«−», цитрат «−», газ не образует — серовар Typhi.",
+                    t: { oxi: "-", cat: "+", mot: "+", lac: "-", glu: "+", h2s: "~", ind: "-", ure: "-", cit: "-", vp: "-", mr: "+", ldc: "+", pd: "-", man: "+", ino: "-", sal: "-", ara: "-", mal: "-", suc: "-", dnl: "-", pig: "-", o42: "-", coa: "-" }
+                },
+                {
+                    id: "shigella", n: "Shigella spp.", g: "Shigella", fam: "Enterobacteriaceae", m: "gneg_rod",
+                    note: "Неподвижна, лактоза «−», газ не образует, лизиндекарбоксилаза «−».",
+                    t: { oxi: "-", cat: "+", mot: "-", lac: "-", glu: "+", h2s: "-", ind: "~", ure: "-", cit: "-", vp: "-", mr: "+", ldc: "-", pd: "-", man: "~", ino: "-", sal: "-", ara: "-", mal: "-", suc: "-", dnl: "-", pig: "-", coa: "-" }
+                },
+                {
+                    id: "pmirabilis", n: "Proteus mirabilis", g: "Proteus", fam: "Enterobacteriaceae", m: "gneg_rod",
+                    note: "«Роевидный» рост, уреаза «+», H₂S «+», индол «−».",
+                    t: { oxi: "-", cat: "+", mot: "+", lac: "-", glu: "+", h2s: "+", ind: "-", ure: "+", cit: "~", vp: "-", mr: "+", ldc: "-", pd: "+", man: "-", ino: "-", sal: "-", ara: "-", mal: "-", suc: "-", dnl: "-", pig: "-", coa: "-" }
+                },
+                {
+                    id: "pvulgaris", n: "Proteus vulgaris", g: "Proteus", fam: "Enterobacteriaceae", m: "gneg_rod",
+                    note: "Индол «+», H₂S обычно «−», маннит «+» (в отличие от P. mirabilis).",
+                    t: { oxi: "-", cat: "+", mot: "+", lac: "-", glu: "+", h2s: "-", ind: "+", ure: "+", cit: "-", vp: "-", mr: "+", ldc: "-", pd: "+", man: "+", ino: "-", sal: "-", ara: "-", mal: "-", suc: "-", dnl: "-", pig: "-", coa: "-" }
+                },
+                {
+                    id: "ecloacae", n: "Enterobacter cloacae", g: "Enterobacter", fam: "Enterobacteriaceae", m: "gneg_rod",
+                    note: "Подвижна, ВП «+», цитрат «+», инозитол «+».",
+                    t: { oxi: "-", cat: "+", mot: "+", lac: "+", glu: "+", h2s: "-", ind: "-", ure: "~", cit: "+", vp: "+", mr: "-", ldc: "+", pd: "-", man: "+", ino: "+", sal: "+", ara: "+", mal: "+", suc: "+", dnl: "-", pig: "-", coa: "-" }
+                },
+                {
+                    id: "cfreundii", n: "Citrobacter freundii", g: "Citrobacter", fam: "Enterobacteriaceae", m: "gneg_rod",
+                    note: "H₂S «+», ВП «−», лизиндекарбоксилаза «−».",
+                    t: { oxi: "-", cat: "+", mot: "+", lac: "+", glu: "+", h2s: "+", ind: "-", ure: "~", cit: "+", vp: "-", mr: "+", ldc: "-", pd: "-", man: "+", ino: "~", sal: "~", ara: "+", mal: "+", suc: "+", dnl: "-", pig: "-", coa: "-" }
+                },
+                {
+                    id: "smarcescens", n: "Serratia marcescens", g: "Serratia", fam: "Enterobacteriaceae", m: "gneg_rod",
+                    note: "ДНКаза «+», ВП «+», лактоза «−», красный пигмент (продигиозин).",
+                    t: { oxi: "-", cat: "+", mot: "+", lac: "-", glu: "+", h2s: "-", ind: "-", ure: "~", cit: "+", vp: "+", mr: "-", ldc: "+", pd: "-", man: "+", ino: "-", sal: "+", ara: "-", mal: "+", suc: "+", dnl: "+", pig: "+", coa: "-" }
+                },
+                {
+                    id: "yentero", n: "Yersinia enterocolitica", g: "Yersinia", fam: "Enterobacteriaceae", m: "gneg_rod",
+                    note: "Уреаза «+», сахароза «−», подвижность лучше при 25 °C.",
+                    t: { oxi: "-", cat: "+", mot: "~", lac: "-", glu: "+", h2s: "-", ind: "-", ure: "+", cit: "-", vp: "-", mr: "+", ldc: "-", pd: "-", man: "+", ino: "-", sal: "-", ara: "+", mal: "+", suc: "-", dnl: "-", pig: "-", coa: "-" }
+                },
+
+                /* ---- Неферментирующие Г⁻ ---- */
+                {
+                    id: "paer", n: "Pseudomonas aeruginosa", g: "Pseudomonas", fam: "Pseudomonadaceae", m: "gneg_rod",
+                    note: "Оксидаза «+», рост при 42 °C, сине-зелёный пигмент (пиоцианин).",
+                    t: { oxi: "+", cat: "+", mot: "+", lac: "-", glu: "+", h2s: "-", ind: "-", ure: "~", cit: "+", vp: "-", mr: "-", ldc: "-", pd: "-", man: "+", ino: "-", sal: "-", ara: "-", mal: "-", suc: "-", dnl: "-", pig: "+", o42: "+", o44: "~", coa: "-" }
+                },
+                {
+                    id: "pfluor", n: "Pseudomonas fluorescens", g: "Pseudomonas", fam: "Pseudomonadaceae", m: "gneg_rod",
+                    note: "Оксидаза «+», флуоресцеин, не растёт при 42 °C.",
+                    t: { oxi: "+", cat: "+", mot: "+", lac: "-", glu: "+", h2s: "-", ind: "-", ure: "-", cit: "+", vp: "-", mr: "-", ldc: "-", pd: "-", man: "-", ino: "-", sal: "-", ara: "+", mal: "-", suc: "+", dnl: "-", pig: "+", o42: "-", coa: "-" }
+                },
+                {
+                    id: "abaum", n: "Acinetobacter baumannii", g: "Acinetobacter", fam: "Moraxellaceae", m: "gneg_rod",
+                    note: "Оксидаза «−», неподвижна (коккобактерии), растёт при 44 °C.",
+                    t: { oxi: "-", cat: "+", mot: "-", lac: "-", glu: "+", h2s: "-", ind: "-", ure: "-", cit: "~", vp: "-", mr: "-", ldc: "-", pd: "-", man: "+", ino: "-", sal: "-", ara: "-", mal: "+", suc: "-", dnl: "~", pig: "-", o42: "+", o44: "+", coa: "-" }
+                },
+                {
+                    id: "smalt", n: "Stenotrophomonas maltophilia", g: "Stenotrophomonas", fam: "Xanthomonadaceae", m: "gneg_rod",
+                    note: "Оксидаза «−», мальтоза окисляется, ДНКаза «+», лизиндекарбоксилаза «+».",
+                    t: { oxi: "-", cat: "+", mot: "+", lac: "-", glu: "+", h2s: "-", ind: "-", ure: "-", cit: "~", vp: "-", mr: "-", ldc: "+", pd: "-", man: "-", ino: "-", sal: "-", ara: "-", mal: "+", suc: "-", dnl: "+", pig: "+", o42: "~", coa: "-" }
+                },
+                {
+                    id: "bcep", n: "Burkholderia cepacia", g: "Burkholderia", fam: "Burkholderiaceae", m: "gneg_rod",
+                    note: "Оксидаза слабо «+», окисляет лактозу и мальтозу, цитрат «+».",
+                    t: { oxi: "+", cat: "+", mot: "+", lac: "+", glu: "+", h2s: "-", ind: "-", ure: "~", cit: "+", vp: "-", mr: "-", ldc: "-", pd: "-", man: "+", ino: "-", sal: "-", ara: "+", mal: "+", suc: "+", dnl: "~", pig: "~", o42: "+", coa: "-" }
+                },
+
+                /* ---- Грамположительные ---- */
+                {
+                    id: "saureus", n: "Staphylococcus aureus", g: "Staphylococcus", fam: "Staphylococcaceae", m: "gpos_cocci",
+                    note: "Коагулаза «+», ДНКаза «+», маннит в аэробных условиях «+».",
+                    t: { oxi: "-", cat: "+", mot: "-", lac: "+", glu: "+", ind: "-", ure: "-", cit: "~", vp: "+", mr: "+", man: "+", mal: "+", suc: "+", dnl: "+", pig: "~", coa: "+", opt: "-", bac: "-", camp: "-", salt: "+" }
+                },
+                {
+                    id: "sepid", n: "Staphylococcus epidermidis", g: "Staphylococcus", fam: "Staphylococcaceae", m: "gpos_cocci",
+                    note: "Коагулаза «−», маннит «−», чувствителен к новобиоцину.",
+                    t: { oxi: "-", cat: "+", mot: "-", lac: "~", glu: "+", ind: "-", ure: "~", man: "-", mal: "+", suc: "+", dnl: "-", pig: "-", coa: "-", opt: "-", bac: "-", camp: "-", salt: "~" }
+                },
+                {
+                    id: "ssaproph", n: "Staphylococcus saprophyticus", g: "Staphylococcus", fam: "Staphylococcaceae", m: "gpos_cocci",
+                    note: "Коагулаза «−», маннит «+», устойчив к новобиоцину.",
+                    t: { oxi: "-", cat: "+", mot: "-", lac: "~", glu: "+", ind: "-", ure: "+", man: "+", mal: "+", suc: "+", dnl: "-", pig: "-", coa: "-", opt: "-", bac: "-", camp: "-", salt: "-" }
+                },
+                {
+                    id: "spyog", n: "Streptococcus pyogenes", g: "Streptococcus", fam: "Streptococcaceae", m: "gpos_cocci",
+                    note: "β-гемолиз, чувствителен к бацитрацину, PYR «+».",
+                    t: { oxi: "-", cat: "-", mot: "-", lac: "+", glu: "+", ind: "-", ure: "-", man: "-", ino: "-", suc: "+", dnl: "-", pig: "-", coa: "-", opt: "-", bac: "+", camp: "-", salt: "-" }
+                },
+                {
+                    id: "spneu", n: "Streptococcus pneumoniae", g: "Streptococcus", fam: "Streptococcaceae", m: "gpos_cocci",
+                    note: "α-гемолиз, чувствителен к оптохину, лизис солями жёлчи.",
+                    t: { oxi: "-", cat: "-", mot: "-", lac: "+", glu: "+", ind: "-", ure: "-", man: "-", ino: "-", suc: "+", dnl: "-", pig: "-", coa: "-", opt: "+", bac: "-", camp: "-", salt: "-" }
+                },
+                {
+                    id: "sagal", n: "Streptococcus agalactiae", g: "Streptococcus", fam: "Streptococcaceae", m: "gpos_cocci",
+                    note: "CAMP-тест «+», гидролиз гиппурата.",
+                    t: { oxi: "-", cat: "-", mot: "-", lac: "-", glu: "+", ind: "-", ure: "-", man: "-", ino: "-", suc: "+", dnl: "-", pig: "-", coa: "-", opt: "-", bac: "-", camp: "+", salt: "~" }
+                },
+                {
+                    id: "efaec", n: "Enterococcus faecalis", g: "Enterococcus", fam: "Enterococcaceae", m: "gpos_cocci",
+                    note: "Растёт в 6,5 % NaCl и при 45 °C, PYR «+», устойчив к бацитрацину.",
+                    t: { oxi: "-", cat: "-", mot: "-", lac: "+", glu: "+", ind: "-", ure: "-", man: "+", ino: "-", ara: "+", suc: "+", dnl: "-", pig: "-", coa: "-", opt: "-", bac: "-", camp: "-", salt: "+" }
+                },
+                {
+                    id: "smitis", n: "Streptococcus mitis (viridans)", g: "Streptococcus", fam: "Streptococcaceae", m: "gpos_cocci",
+                    note: "α-гемолиз, оптохин-резистентен, в жёлчи не лизируется.",
+                    t: { oxi: "-", cat: "-", mot: "-", lac: "+", glu: "+", ind: "-", ure: "-", man: "-", ino: "-", suc: "+", dnl: "-", pig: "-", coa: "-", opt: "-", bac: "-", camp: "-", salt: "-" }
+                },
+                {
+                    id: "bcereus", n: "Bacillus cereus", g: "Bacillus", fam: "Bacillaceae", m: "gpos_rod",
+                    note: "Крупные спорообразующие палочки, лецитиназа «+», ВП «+».",
+                    t: { oxi: "~", cat: "+", mot: "+", lac: "-", glu: "+", h2s: "-", ind: "-", ure: "-", cit: "~", vp: "+", mr: "~", man: "-", mal: "+", suc: "+", dnl: "+", pig: "-", o42: "+", salt: "~" }
+                },
+                {
+                    id: "lmono", n: "Listeria monocytogenes", g: "Listeria", fam: "Listeriaceae", m: "gpos_rod",
+                    note: "«Кувыркающаяся» подвижность при 25 °C, CAMP «+», рост при 4 °C.",
+                    t: { oxi: "-", cat: "+", mot: "~", lac: "-", glu: "+", h2s: "-", ind: "-", ure: "-", cit: "~", vp: "+", mr: "+", man: "+", mal: "+", suc: "+", dnl: "-", pig: "-", o42: "~", salt: "+" }
+                }
+            ];
+
+            const MORPH_LABEL = {
+                gneg_rod: "Г⁻ палочки",
+                gpos_cocci: "Г⁺ кокки",
+                gpos_rod: "Г⁺ палочки",
+                gneg_cocci: "Г⁻ кокки"
+            };
+
+            const MORPH_SHORT = {
+                gneg_rod: "Г⁻",
+                gpos_cocci: "Г⁺ кокки",
+                gpos_rod: "Г⁺ палочки",
+                gneg_cocci: "Г⁻ кокки"
+            };
+
+            /* ---------------- СОСТОЯНИЕ ---------------- */
+            const state = {};
+            let morph = "";
+
+            const $ = function (id) { return document.getElementById(id); };
+            const esc = function (s) {
+                return String(s).replace(/[&<>"]/g, function (c) {
+                    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+                });
+            };
+            const markGlyph = function (v) { return v === "-" ? "−" : (v === "~" ? "±" : "+"); };
+
+            /* ---------------- ОТРИСОВКА ПАНЕЛИ ---------------- */
+            function renderTests() {
+                const host = $("testHost");
+                let html = "";
+
+                GROUPS.forEach(function (g) {
+                    const items = TESTS.filter(function (t) { return t.g === g.id; });
+                    html += '<div class="tgroup">';
+                    html += '<div class="tgroup-head mb-3"><span class="idx mono">' + g.idx + '</span>' +
+                        '<span class="ttl">' + g.title + '</span><span class="line"></span>' +
+                        '<span class="mono text-[10px] text-dim">' + items.length + '</span></div>';
+                    html += '<div class="grid gap-1 sm:grid-cols-2">';
+
+                    items.forEach(function (t) {
+                        html += '<div class="trow" data-test="' + t.id + '">' +
+                            '<span class="tname">' + t.l + '</span>' +
+                            '<span class="tseg" role="group" aria-label="' + esc(t.l) + '">' +
+                            '<button type="button" class="tbtn" data-v="-" aria-label="Отрицательно">−</button>' +
+                            '<button type="button" class="tbtn" data-v="~" aria-label="Вариабельно">±</button>' +
+                            '<button type="button" class="tbtn" data-v="+" aria-label="Положительно">+</button>' +
+                            '</span></div>';
+                    });
+
+                    html += '</div></div>';
+                });
+
+                host.innerHTML = html;
+            }
+
+            /* ---------------- РАСЧЁТ ---------------- */
+            const W_MATCH = 2, W_PARTIAL = 0.8, W_MISS = -1.6, W_MORPH = 2;
+
+            function evaluate() {
+                const marked = TESTS.filter(function (t) { return state[t.id]; });
+
+                if (marked.length < 3) {
+                    return { ready: false, markedCount: marked.length, ranked: [], top: null };
+                }
+
+                const scored = ORGANISMS.map(function (org) {
+                    let score = 0, max = 0, exact = 0;
+                    const conflicts = [];
+
+                    marked.forEach(function (t) {
+                        const ref = org.t[t.id];
+                        if (ref === undefined) return;
+                        max += W_MATCH;
+                        if (ref === "~") {
+                            score += W_PARTIAL;
+                        } else if (ref === state[t.id]) {
+                            score += W_MATCH;
+                            exact++;
+                        } else {
+                            score += W_MISS;
+                            conflicts.push({ id: t.id, ref: ref, got: state[t.id] });
+                        }
+                    });
+
+                    if (morph) {
+                        max += W_MORPH;
+                        score += (org.m === morph) ? W_MORPH : -W_MORPH;
+                    }
+
+                    const conf = max > 0 ? Math.max(0, Math.min(100, Math.round((score / max) * 100))) : 0;
+                    return { org: org, score: score, max: max, exact: exact, conf: conf, conflicts: conflicts };
+                });
+
+                scored.sort(function (a, b) {
+                    if (b.score !== a.score) return b.score - a.score;
+                    if (b.exact !== a.exact) return b.exact - a.exact;
+                    return b.conf - a.conf;
+                });
+
+                return { ready: true, markedCount: marked.length, ranked: scored, top: scored[0] };
+            }
+
+            function reliability(conf) {
+                if (conf >= 75) return { txt: "высокое соответствие", cls: "ok" };
+                if (conf >= 55) return { txt: "умеренное соответствие", cls: "" };
+                return { txt: "низкое — нужны доп. тесты", cls: "bad" };
+            }
+
+            /* ---------------- ОТРИСОВКА РЕЗУЛЬТАТА ---------------- */
+            function renderResult(res) {
+                const empty = $("empty"), box = $("result"), ring = $("ringVal");
+
+                if (!res.ready) {
+                    empty.classList.remove("hidden");
+                    box.classList.add("hidden");
+                    $("stamp").textContent = "";
+                    return;
+                }
+
+                empty.classList.add("hidden");
+                box.classList.remove("hidden");
+
+                const top = res.top;
+                const rel = reliability(top.conf);
+
+                $("stamp").textContent = "тестов: " + res.markedCount + " · " + new Date().toLocaleTimeString("ru-RU");
+                $("rankLabel").textContent = res.ranked.filter(function (r) { return r.score === top.score; }).length > 1
+                    ? "СОВПАДЕНИЕ ПО НЕСКОЛЬКИМ ВАРИАНТАМ"
+                    : "НАИЛУЧШЕЕ СОВПАДЕНИЕ";
+
+                $("topName").textContent = top.org.n;
+                $("topFamily").textContent = "род " + top.org.g + " · сем. " + top.org.fam;
+
+                const C = 2 * Math.PI * 52;
+                ring.style.strokeDasharray = C;
+                ring.style.strokeDashoffset = C * (1 - top.conf / 100);
+                $("confNum").textContent = top.conf + "%";
+
+                let tags = '<span class="tag ' + rel.cls + '">' + rel.txt + '</span>';
+                tags += '<span class="tag">' + (MORPH_SHORT[top.org.m] || "—") + '</span>';
+                tags += '<span class="tag">совпало: ' + top.exact + '</span>';
+                $("topTags").innerHTML = tags;
+
+                /* альтернативы */
+                const alts = res.ranked.slice(1, 4).filter(function (r) { return r.conf > 0; });
+                if (!alts.length) {
+                    $("alts").innerHTML = '<div class="text-[13px] text-dim">Выраженных альтернатив нет — профиль однозначно совпал с лидером.</div>';
+                } else {
+                    $("alts").innerHTML = alts.map(function (r) {
+                        return '<div>' +
+                            '<div class="flex items-baseline justify-between gap-3">' +
+                            '<span class="text-[13.5px] leading-tight">' + r.org.n + '</span>' +
+                            '<span class="mono text-[11.5px] text-dim">' + r.conf + '%</span></div>' +
+                            '<div class="bar mt-1.5"><span style="width:' + r.conf + '%"></span></div>' +
+                            '</div>';
+                    }).join("");
+                }
+
+                /* расхождения */
+                const conflicts = top.conflicts.concat(
+                    (alts[0] ? alts[0].conflicts : []).filter(function (c) {
+                        return !top.conflicts.some(function (x) { return x.id === c.id; });
+                    })
+                );
+                if (conflicts.length) {
+                    $("divergeWrap").classList.remove("hidden");
+                    $("diverge").innerHTML = conflicts.slice(0, 6).map(function (c) {
+                        return '<span class="tag bad">' + TEST_LABEL[c.id] + ' — у вас ' + markGlyph(c.got) +
+                            ', ожидается ' + markGlyph(c.ref) + '</span>';
+                    }).join("");
+                } else {
+                    $("divergeWrap").classList.add("hidden");
+                }
+
+                /* следующий дифференцирующий тест */
+                const second = alts[0];
+                let next = null;
+                if (second) {
+                    next = TESTS.find(function (t) {
+                        if (state[t.id]) return false;
+                        const a = top.org.t[t.id], b = second.org.t[t.id];
+                        return a !== undefined && b !== undefined && a !== "~" && b !== "~" && a !== b;
+                    });
+                } else {
+                    next = TESTS.find(function (t) {
+                        return !state[t.id] && top.org.t[t.id] !== undefined && top.org.t[t.id] !== "~";
+                    });
+                }
+
+                if (next) {
+                    $("nextWrap").classList.remove("hidden");
+                    if (second) {
+                        $("nextStep").innerHTML = 'Отметьте <b>' + next.l + '</b> — это разведёт <b>' + top.org.n +
+                            '</b> и <b>' + second.org.n + '</b> (ожидается ' + markGlyph(top.org.t[next.id]) + ' у лидера).';
+                    } else {
+                        $("nextStep").innerHTML = 'Для повышения достоверности добавьте <b>' + next.l + '</b>.';
+                    }
+                } else {
+                    $("nextWrap").classList.add("hidden");
+                }
+            }
+
+            function update() {
+                TESTS.forEach(function (t) {
+                    const row = document.querySelector('.trow[data-test="' + t.id + '"]');
+                    if (!row) return;
+                    const v = state[t.id];
+                    row.setAttribute("data-state", v || "");
+                    row.querySelectorAll(".tbtn").forEach(function (b) {
+                        b.classList.toggle("on", b.getAttribute("data-v") === v);
+                    });
+                });
+                $("cntMarked").textContent = TESTS.filter(function (t) { return state[t.id]; }).length;
+                renderResult(evaluate());
+            }
+
+            /* ---------------- СОБЫТИЯ ---------------- */
+            $("testHost").addEventListener("click", function (e) {
+                const btn = e.target.closest(".tbtn");
+                if (!btn) return;
+                const row = btn.closest(".trow");
+                const id = row.getAttribute("data-test");
+                const v = btn.getAttribute("data-v");
+                state[id] = (state[id] === v) ? null : v;
+                update();
+            });
+
+            $("morphSel").addEventListener("change", function (e) {
+                morph = e.target.value;
+                update();
+            });
+
+            $("btnReset").addEventListener("click", function () {
+                TESTS.forEach(function (t) { state[t.id] = null; });
+                morph = "";
+                $("morphSel").value = "";
+                update();
+            });
+
+            $("btnRandom").addEventListener("click", function () {
+                TESTS.forEach(function (t) { state[t.id] = null; });
+                const pool = TESTS.slice();
+                const n = 6 + Math.floor(Math.random() * 6);
+                for (let i = 0; i < n && pool.length; i++) {
+                    const idx = Math.floor(Math.random() * pool.length);
+                    const t = pool.splice(idx, 1)[0];
+                    const r = Math.random();
+                    state[t.id] = r < 0.45 ? "+" : (r < 0.9 ? "-" : "~");
+                }
+                update();
+            });
+
+            document.querySelectorAll("[data-preset]").forEach(function (b) {
+                b.addEventListener("click", function () {
+                    const org = ORGANISMS.find(function (o) { return o.id === b.getAttribute("data-preset"); });
+                    if (!org) return;
+                    TESTS.forEach(function (t) { state[t.id] = null; });
+                    Object.keys(org.t).forEach(function (k) {
+                        if (org.t[k] === "+" || org.t[k] === "-") state[k] = org.t[k];
+                    });
+                    morph = org.m;
+                    $("morphSel").value = org.m;
+                    update();
+                    $("demo").scrollIntoView({ behavior: "smooth", block: "start" });
+                });
+            });
+
+            /* ---------------- ДЕКОР ---------------- */
+            (function buildOrbit() {
+                const host = $("orbitHost");
+                if (!host) return;
+                const items = [
+                    { t: "ЛАКТОЗА", v: "+", c: "#b6ff3a" },
+                    { t: "H₂S", v: "+", c: "#b6ff3a" },
+                    { t: "ИНДОЛ", v: "+", c: "#b6ff3a" },
+                    { t: "ЦИТРАТ", v: "−", c: "#ff4fd8" },
+                    { t: "УРЕАЗА", v: "−", c: "#ff4fd8" },
+                    { t: "ОКСИДАЗА", v: "−", c: "#ff4fd8" },
+                    { t: "ВП", v: "±", c: "#ffc44d" }
+                ];
+                const R = 46;
+                items.forEach(function (it, i) {
+                    const a = (i / items.length) * Math.PI * 2 - Math.PI / 2;
+                    const el = document.createElement("span");
+                    el.className = "orb-chip mono";
+                    el.style.left = (50 + R * Math.cos(a)) + "%";
+                    el.style.top = (50 + R * Math.sin(a)) + "%";
+                    el.style.transform = "translate(-50%,-50%)";
+                    el.style.animation = "pulseCore " + (4 + i * 0.45) + "s ease-in-out infinite";
+                    el.innerHTML = esc(it.t) + ' <i style="color:' + it.c + '">' + it.v + '</i>';
+                    host.appendChild(el);
+                });
+            })();
+
+            (function buildMarquee() {
+                const words = TESTS.map(function (t) { return t.l; }).concat(["ПРИКАЗ № 535", "ИДЕНТИФИКАЦИЯ", "РОД / ВИД"]);
+                const line = words.map(function (w) {
+                    return '<span>' + esc(w).toUpperCase() + '</span><span class="text-neon-cyan">·</span>';
+                }).join("");
+                $("mqA").innerHTML = line;
+                $("mqB").innerHTML = line;
+            })();
+
+            (function reveal() {
+                const els = document.querySelectorAll(".rv");
+                if (!("IntersectionObserver" in window)) {
+                    els.forEach(function (el) { el.classList.add("in"); });
+                    return;
+                }
+                const io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (en) {
+                        if (en.isIntersecting) {
+                            en.target.classList.add("in");
+                            io.unobserve(en.target);
+                        }
+                    });
+                }, { rootMargin: "0px 0px -12% 0px", threshold: .12 });
+                els.forEach(function (el) { io.observe(el); });
+            })();
+
+            (function navScroll() {
+                const nav = $("nav");
+                const onScroll = function () {
+                    nav.classList.toggle("solid", window.scrollY > 24);
+                };
+                onScroll();
+                window.addEventListener("scroll", onScroll, { passive: true });
+            })();
+
+            (function cursorGlow() {
+                const g = $("cursorGlow");
+                if (!g || window.matchMedia("(hover: none)").matches) return;
+                let x = window.innerWidth / 2, y = window.innerHeight / 2, cx = x, cy = y, shown = false;
+                window.addEventListener("pointermove", function (e) {
+                    x = e.clientX; y = e.clientY;
+                    if (!shown) { g.style.opacity = "1"; shown = true; }
+                }, { passive: true });
+                (function loop() {
+                    cx += (x - cx) * 0.12;
+                    cy += (y - cy) * 0.12;
+                    g.style.transform = "translate3d(" + cx + "px," + cy + "px,0) translate(-50%,-50%)";
+                    requestAnimationFrame(loop);
+                })();
+            })();
+
+            /* ---------------- СТАРТ ---------------- */
+            renderTests();
+            update();
+        })();
+    </script>
+</body>
+
+</html>
